@@ -1,0 +1,58 @@
+<link rel="import" href="../polymer/polymer.html">
+<script src="./bower_components/web3/dist/web3.min.js"></script>
+<script src="./bower_components/hooked-web3-provider/build/hooked-web3-provider.min.js"></script>
+
+<!--
+`web3-hook`
+
+
+@demo demo/index.html
+-->
+
+<dom-module id="web3-hook">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+  </template>
+
+  <script>
+    class MyElement extends Polymer.Element {
+      static get is() { return 'web3-hook'; }
+      static get properties() {
+        return {
+          web3: {
+            type: Object
+          },
+          host: {
+            type: String,
+            value: 'https://eth.swarm.city/',
+          },
+          debug: {
+            type: Boolean,
+            value: true
+          },
+          keystore:{
+            type: Object,
+            observer: '_connect'
+          }
+        };
+      }
+      _connect(){
+        this.web3Host = new Web3(new Web3.providers.HttpProvider(this.host));
+        this.web3Provider = new HookedWeb3Provider({
+          host: this.host,
+          transaction_signer: this.keystore
+        });
+        this.web3 = this.web3Host; // This may need changing to this.web3Provider aftr more testing 
+        if(this.debug){
+          console.log(web3);
+          console.log(this.web3Host);
+          console.log(this.web3Provider);
+        }
+      }
+    } window.customElements.define(MyElement.is, MyElement);
+  </script>
+</dom-module>
