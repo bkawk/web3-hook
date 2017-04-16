@@ -26,10 +26,6 @@
           web3: {
             type: Object
           },
-          host: {
-            type: String,
-            value: 'https://eth.bkawk.com/',
-          },
           debug: {
             type: Boolean,
             value: true
@@ -40,19 +36,57 @@
           }
         };
       }
-      _connect(){
-        this.web3Host = new Web3(new Web3.providers.HttpProvider(this.host));
-        this.web3Provider = new HookedWeb3Provider({
-          host: this.host,
-          transaction_signer: this.keystore
-        });
-        this.web3 = this.web3Host; // This may need changing to this.web3Provider aftr more testing 
-        if(this.debug){
-          console.log(web3);
-          console.log(this.web3Host);
-          console.log(this.web3Provider);
-        }
+
+    connectedCallback(){
+      super.connectedCallback();
+      if(!this.web3){
+        this._connect()
+        .then(function() {
+          this._balance('0xa1fe5d3ca40da27705847361351c34a3e77d187a');
+        }.bind(this)).catch(function(err) {
+          console.log(err)
+          this._connect();
+        }.bind(this))
       }
+    }
+    
+    _connect(){
+      return new Promise(function(resolve, reject) {
+      this.web3 = new Web3(new Web3.providers.HttpProvider('http://eth.bkawk.com'));
+      this.web3Provider = new HookedWeb3Provider({
+        host: 'http://eth.bkawk.com',
+        transaction_signer: this.keystore
+      });
+      this.web3.setProvider(this.web3Provider);
+      resolve()
+      }.bind(this))
+    }
+
+    _balance(account){
+      this.web3.eth.getBalance(account, 'latest', function(err, result) {
+        if (err) { 
+          console.error("Error while retrieving the balance for address " + err);
+        } else {
+          console.debug("Balance = "+ Number(this.web3.fromWei(result, "ether")) ); 
+        }            
+      }.bind(this)); 
+    }
+
+    _transfer(transferFrom, transferTo, transferAmount){
+      this.web3.eth.sendTransaction({
+        from: transferFrom, 
+        to: transferTo, 
+        value: this.web3.toWei(transferAmount, "ether")}, function(err, result){
+          if(err){
+            console.log("Error is "+err)
+          } else{
+            console.log("Transaction is="+result);
+          }
+        })
+    }
+
+
+
     } window.customElements.define(MyElement.is, MyElement);
   </script>
 </dom-module>
